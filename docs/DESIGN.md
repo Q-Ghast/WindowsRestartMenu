@@ -2,7 +2,7 @@
 
 > 本文件是入口文档 [AGENTS.md](../AGENTS.md) 的详细展开，保留原章节编号 §2–§11，避免内部引用失效。
 > 工作流程、已确认决策、范围摘要与下一步以 `AGENTS.md` 为准。
-> 状态：Phase 1 视觉骨架已完成（静态、占位图标），完整模拟交互待 Phase 2。最后更新：2026-10-25。
+> 状态：Phase 1 视觉骨架已完成（静态、真实图标 + 少量占位），完整模拟交互待 Phase 2。最后更新：2026-10-25。
 
 **已确认决策（详见 `AGENTS.md` §2）：**
 
@@ -547,9 +547,10 @@ D:\Program\WindowsReStartMenu.sln\
 ### 5.11 图标策略
 
 - 目标：视觉上接近参考图的真实应用图标，但不做运行时真实枚举。
-- 方案 A（优先，视觉最好）：开发期用 `tools/Extract-AppIcons.ps1` 从本机已安装应用一次性提取图标，输出 64×64/96×96 PNG 到 `StartMenu.App/Assets/AppIcons/`；运行时只读静态资源，mock 目录仍由 `FakeAppCatalog` 提供。
-- 方案 B（回退）：内置占位图标（Fluent 字形 + 品牌色圆角块），保证结构可验收。
-- 图标来源需用户确认；不提交可能引起版权/隐私问题的素材。缺失图标一律回退占位，不崩溃。
+- **当前实现（2026-10-25）**：`tools/Extract-AppIcons.ps1` 通过 Shell 的 `IShellItemImageFactory` 从本机 Start 菜单/AppsFolder 提取 **41 个 256×256 PNG**（保留透明通道），输出到 `StartMenu.App/Assets/AppIcons/`；运行时只读静态资源，mock 目录仍由 `FakeAppCatalog` 提供。
+- 提取脚本按应用 id 命名（如 `vscode.png`）；`AppTileViewModel` 检查 `Assets/AppIcons/{id}.png`，存在则显示 `Image`，不存在则回退到「品牌色 + Fluent 字形」占位。
+- 当前占位：PowerToys、LibreOffice（系统返回通用图标）、Discord、QQ、Minecraft、Epic Games、Firefox（本机未安装）。
+- 不提交可能引起版权/隐私问题的素材；缺失图标一律回退占位，不崩溃。
 - 应用图标显示尺寸 36；类别卡片 32；搜索结果 32；列表 24。
 
 ### 5.12 设置持久化
@@ -596,7 +597,7 @@ D:\Program\WindowsReStartMenu.sln\
 
 ### Phase 1：视觉骨架（优先目标：“模样”）
 
-> **进度（2026-10-25）**：搜索框、8×4 固定区、4 列类别卡片、页脚已用 mock 数据渲染；深色主题、圆角亚克力、底部居中。图标暂用「品牌色 + Fluent 字形」占位。`dotnet build` 通过，截图见 `docs/references/local/phase1-window.png`。
+> **进度（2026-10-25）**：搜索框、8×4 固定区、4 列类别卡片、页脚已用 mock 数据渲染；深色主题、圆角亚克力、底部居中。已提取并接入 **41 个本机真实图标**（256×256 PNG，透明通道），PowerToys、LibreOffice 与 5 个未安装应用保留占位。`dotnet build` 通过，截图见 `docs/references/local/phase1-window.png`。
 
 - Tokens/Styles/Templates。
 - 搜索框、固定区 8×4、全部区 4 列类别卡片（当前 4 类 1 行）、页脚。
@@ -708,7 +709,7 @@ D:\Program\WindowsReStartMenu.sln\
 
 1. **“显示精简信息”的真实语义**：默认按“图标-only 紧凑模式”实现；如果实机是折叠固定区/其他行为，请告知。
 2. **类别卡片点击后的真实行为**：默认按“进入类别详情页 + 返回”实现；如果实机是原地展开，请告知。
-3. **图标来源**：Phase 1 当前用「品牌色 + Fluent 字形」占位；是否切换为本机已安装应用的真实图标（一次性静态提取，不做运行时枚举）？
+3. **图标**：已提取 41 个本机真实图标；PowerToys、LibreOffice 与 5 个未安装应用保留占位，是否接受？
 4. **参考截图**：是否同意裁剪出“只含开始菜单”的参考图入库（`docs/references/`）？默认只存本地、不入库。
 5. **关闭行为**：首期默认“关闭即退出进程”，不做托盘/常驻/热键；是否接受？若希望常驻，需要额外做托盘或调试热键。
 6. **用户名/头像**：首期用 mock（“Xianene Q” + 占位头像），还是读取当前 Windows 账户显示名/头像？

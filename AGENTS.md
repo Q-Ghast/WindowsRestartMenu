@@ -1,6 +1,6 @@
 # WindowsReStartMenu — AGENTS.md
 
-> **状态：Phase 1 视觉骨架已完成（静态、占位图标），完整模拟交互待 Phase 2。** 最后更新：2026-10-25。
+> **状态：Phase 1 视觉骨架已完成（静态、真实图标 + 少量占位），完整模拟交互待 Phase 2。** 最后更新：2026-10-25。
 > 本文件是入口：工作流、已确认决策、范围、结构与下一步。
 > 详细设计、实现细节、阶段、验收、风险与构建说明统一放在 **[docs/DESIGN.md](docs/DESIGN.md)**。
 > `README.md` 保持不动。
@@ -31,7 +31,7 @@
 
 用 **WinUI 3** 重制 **Windows 11 26H2 新版开始菜单**的视觉与交互，采用多项目分层。当前阶段先做到“看起来就是那个开始菜单”，再在本地假数据上跑通完整模拟交互；**不接管、不替换系统真正的开始菜单**。
 
-当前仓库：`StartMenu.App` 已包含窗口壳、主题资源、`StartMenuPage` 与 ViewModel；`StartMenu.Core` 已含 mock 数据与模型；解决方案与根目录构建配置齐备。`StartMenu.HookHost` 仍为占位目录，`README.md` 仍未修改。
+当前仓库：`StartMenu.App` 已包含窗口壳、主题资源、`StartMenuPage`、ViewModel 与 41 个本机提取的 256×256 图标；`StartMenu.Core` 已含 mock 数据与模型；`tools/Extract-AppIcons.ps1` 可重复提取。`StartMenu.HookHost` 仍为占位目录，`README.md` 仍未修改。
 
 ---
 
@@ -86,6 +86,7 @@ WindowsReStartMenu.sln
 ├─ StartMenu.Core/         # 模型与 mock 目录已建；搜索、设置待做
 ├─ StartMenu.HookHost/     # 仅占位 README；本期不入解决方案、不构建
 ├─ Directory.Build.props / Directory.Packages.props / global.json
+├─ tools/Extract-AppIcons.ps1 # 已使用：提取本机 256×256 图标
 ├─ docs/DESIGN.md          # 详细设计（本文件的所有展开）
 ├─ docs/references/local/  # 本地参考截图，gitignore，不入库
 └─ AGENTS.md / README.md   # 入口说明；README 保持不动
@@ -132,7 +133,7 @@ WindowsReStartMenu.sln
 
 **已完成：Phase 0 窗口改造**——模板标题栏/Mica 已替换为无边框、`SystemBackdropElement` 圆角亚克力、置顶、无任务栏按钮的窗口；125% 下为 1110×1040 @ (375,30)，DWM `corner=2`，`Esc` 与失焦关闭均验证通过。窗口阴影细节留到 Phase 3。
 
-**已完成：Phase 1 视觉骨架**——搜索框、8×4 固定区、4 列类别卡片、页脚已用本地 mock 数据渲染；深色主题、圆角亚克力、底部居中；图标为「品牌色 + Fluent 字形」占位。`dotnet build` 通过，截图已保存到 `docs/references/local/phase1-window.png`。
+**已完成：Phase 1 视觉骨架**——搜索框、8×4 固定区、4 列类别卡片、页脚已用本地 mock 数据渲染；深色主题、圆角亚克力、底部居中。已提取并接入 **41 个本机真实图标**（256×256，保留透明通道）；PowerToys、LibreOffice 因系统返回通用图标而保留占位，Discord/QQ/Minecraft/Epic/Firefox 未安装也保留占位。`dotnet build` 通过，截图见 `docs/references/local/phase1-window.png`。
 
 **下一步：Phase 2 完整模拟交互**——搜索、视图切换（类别/网格/列表）、类别详情、悬停/键盘/动画与设置持久化。详见 `docs/DESIGN.md` §6。
 
@@ -140,7 +141,7 @@ WindowsReStartMenu.sln
 
 1. “显示精简信息”的真实语义：默认按“图标-only 紧凑模式”实现。
 2. 类别卡片点击：默认进入类别详情页 + 返回。
-3. 图标来源：Phase 1 当前为「品牌色 + Fluent 字形」占位；是否切换为本机已安装应用的真实图标？
+3. 图标：已接入 41 个本机真实图标；PowerToys/LibreOffice 与 5 个未安装应用保留占位，是否接受？
 4. 参考截图：默认只存本地、不入库；是否同意裁剪后入库？
 5. 关闭行为：默认关闭即退出，不做托盘/常驻。
 6. 用户名/头像：默认 mock；是否读取当前 Windows 账户？

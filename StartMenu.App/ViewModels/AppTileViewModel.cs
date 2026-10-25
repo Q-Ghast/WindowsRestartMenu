@@ -1,6 +1,9 @@
 using System;
 using System.Globalization;
+using System.IO;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using StartMenu.Core.Models;
 using Windows.UI;
 
@@ -14,6 +17,22 @@ public sealed class AppTileViewModel
         DisplayName = app.DisplayName;
         Glyph = app.Glyph;
         AccentBrush = new SolidColorBrush(ParseColor(app.AccentHex));
+
+        var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcons", app.Id + ".png");
+        if (File.Exists(iconPath))
+        {
+            IconSource = new BitmapImage(new Uri(iconPath, UriKind.Absolute))
+            {
+                DecodePixelWidth = 96
+            };
+            IconVisibility = Visibility.Visible;
+            FallbackVisibility = Visibility.Collapsed;
+        }
+        else
+        {
+            IconVisibility = Visibility.Collapsed;
+            FallbackVisibility = Visibility.Visible;
+        }
     }
 
     public string Id { get; }
@@ -23,6 +42,12 @@ public sealed class AppTileViewModel
     public string Glyph { get; }
 
     public Brush AccentBrush { get; }
+
+    public ImageSource? IconSource { get; }
+
+    public Visibility IconVisibility { get; }
+
+    public Visibility FallbackVisibility { get; }
 
     private static Color ParseColor(string hex)
     {

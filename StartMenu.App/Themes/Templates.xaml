@@ -135,34 +135,52 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Spacing="4">
-                <Border
+                <Grid
                     Width="{StaticResource StartMenu.TileIconSize}"
-                    Height="{StaticResource StartMenu.TileIconSize}"
-                    Background="{Binding AccentBrush}"
-                    CornerRadius="{StaticResource StartMenu.TileCornerRadius}">
-                    <FontIcon
-                        FontFamily="Segoe Fluent Icons"
-                        FontSize="18"
-                        Foreground="White"
-                        Glyph="{Binding Glyph}" />
-                </Border>
+                    Height="{StaticResource StartMenu.TileIconSize}">
+                    <Border
+                        Background="{Binding AccentBrush}"
+                        CornerRadius="{StaticResource StartMenu.TileCornerRadius}"
+                        Visibility="{Binding FallbackVisibility}">
+                        <FontIcon
+                            FontFamily="Segoe Fluent Icons"
+                            FontSize="18"
+                            Foreground="White"
+                            Glyph="{Binding Glyph}" />
+                    </Border>
+                    <Image
+                        Width="{StaticResource StartMenu.TileIconSize}"
+                        Height="{StaticResource StartMenu.TileIconSize}"
+                        Source="{Binding IconSource}"
+                        Stretch="Uniform"
+                        Visibility="{Binding IconVisibility}" />
+                </Grid>
                 <TextBlock Style="{StaticResource StartMenu.TileLabelStyle}" Text="{Binding DisplayName}" />
             </StackPanel>
         </Button>
     </DataTemplate>
 
     <DataTemplate x:Key="StartMenu.MiniAppIconTemplate">
-        <Border
+        <Grid
             Width="{StaticResource StartMenu.CategoryIconSize}"
-            Height="{StaticResource StartMenu.CategoryIconSize}"
-            Background="{Binding AccentBrush}"
-            CornerRadius="7">
-            <FontIcon
-                FontFamily="Segoe Fluent Icons"
-                FontSize="16"
-                Foreground="White"
-                Glyph="{Binding Glyph}" />
-        </Border>
+            Height="{StaticResource StartMenu.CategoryIconSize}">
+            <Border
+                Background="{Binding AccentBrush}"
+                CornerRadius="7"
+                Visibility="{Binding FallbackVisibility}">
+                <FontIcon
+                    FontFamily="Segoe Fluent Icons"
+                    FontSize="16"
+                    Foreground="White"
+                    Glyph="{Binding Glyph}" />
+            </Border>
+            <Image
+                Width="{StaticResource StartMenu.CategoryIconSize}"
+                Height="{StaticResource StartMenu.CategoryIconSize}"
+                Source="{Binding IconSource}"
+                Stretch="Uniform"
+                Visibility="{Binding IconVisibility}" />
+        </Grid>
     </DataTemplate>
 
     <DataTemplate x:Key="StartMenu.CategoryCardTemplate">
