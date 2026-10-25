@@ -2,7 +2,7 @@
 
 > 本文件是入口文档 [AGENTS.md](../AGENTS.md) 的详细展开，保留原章节编号 §2–§11，避免内部引用失效。
 > 工作流程、已确认决策、范围摘要与下一步以 `AGENTS.md` 为准。
-> 状态：Phase 1 视觉骨架已完成（静态、真实图标 + 少量占位），完整模拟交互待 Phase 2。最后更新：2026-10-25。
+> 状态：Phase 2 完整模拟交互已完成，待 Phase 3 视觉/无障碍打磨。最后更新：2026-10-25。
 
 **已确认决策（详见 `AGENTS.md` §2）：**
 
@@ -394,18 +394,18 @@ D:\Program\WindowsReStartMenu.sln\
 1. 启动：创建窗口 → 组装 Core 服务 → 绑定 VM → 计算位置/尺寸 → `Activate` → 打开动画。
 2. 关闭：
    - `Esc`：若搜索有内容先清空；若在类别详情先返回；否则关闭。
-   - 点击窗口外 → `Activated` 变为 `Deactivated` → 延迟约 150ms 关闭；若正在打开 flyout（视图选择/账户/电源），不关闭。
-   - 关闭前播放 100ms 动画，再 `Close()`/退出。
+   - 点击窗口外 → `Activated` 变为 `Deactivated` → 延迟约 150ms 关闭；视图/账户/电源 flyout 打开时不触发失焦关闭（实测）。
+   - 关闭前播放 100ms 淡出，再 `Close()`/退出。
 3. 焦点：
-   - 打开后 300ms 内不启用“失焦关闭”，避免启动瞬间被终端/截图工具抢焦点。
+   - 打开后 600ms 内不启用“失焦关闭”，避免启动瞬间被终端/截图工具抢焦点。
    - 不抢系统级焦点；不注册全局热键（本期）。
-4. 键盘：
+4. 键盘（当前实现）：
    - `Tab`/`Shift+Tab` 在搜索、固定项、视图选择、类别卡片、页脚间移动；
-   - 方向键在固定项/类别卡片间移动；
    - `Enter` 激活当前项；
-   - `Esc` 按上面的层级返回/关闭；
+   - `Esc` 分层：清空搜索 → 退出类别详情 → 关闭；
    - `Ctrl+F` 聚焦搜索；
-   - 任意可打印字符：若焦点不在文本框，则聚焦搜索并输入（中文 IME 场景要求先点击搜索框；首期接受）。
+   - 搜索框 `Down` 聚焦首条搜索结果；
+   - 网格方向键导航**未实现**：全局 `FocusManager` 移动焦点会跑出窗口，已移除，留 Phase 3 做容器内导航。
 5. 鼠标：
    - 悬停/按下反馈；点击固定项/结果/类别卡片执行对应命令；
    - 滚轮滚动中间内容；
@@ -437,44 +437,42 @@ D:\Program\WindowsReStartMenu.sln\
       ├─ Header ("全部" + "视图: 类别")
       └─ ContentControl (Category / Grid / List)
   ```
-- 类别卡片点击 → `CategoryDetail`（返回按钮 + 标题 + 应用网格）；`Esc`/返回恢复之前的滚动位置。
-- 视图切换 → 重设“全部”区滚动到顶部，内容淡入；不改变固定区滚动位置。
-- 搜索激活 → 内容区替换为结果列表；搜索框保持顶部；清空/`Esc` 回到 Home。
+- 类别卡片点击 → `CategoryDetail`（返回按钮 + 标题 + 应用网格）；进入时滚动到顶部并聚焦返回按钮；`Esc`/返回回 Home。
+- 视图切换 → 切换到 Category/Grid/List；不改变固定区内容。
+- 搜索激活 → 内容区替换为结果列表；搜索框保持顶部；清空/`Esc` 回到 Home；滚动位置重置到顶部。
 - 所有状态集中在 `StartMenuViewModel`；不以 code-behind 维护业务状态。
 
 ### 5.4 数据与 MVVM
 
 - 极简 `ObservableObject`：`INotifyPropertyChanged` + `SetProperty`；不引入 MVVM Toolkit。
 - `StartMenuViewModel` 主要成员：
-  - `IReadOnlyList<AppTileViewModel> PinnedApps`
+  - `IReadOnlyList<AppTileViewModel> PinnedApps` / `AllApps`
   - `IReadOnlyList<CategoryCardViewModel> Categories`
-  - `IReadOnlyList<AppTileViewModel> AllApps`
-  - `IReadOnlyList<SearchResultViewModel> SearchResults`
-  - `string SearchQuery`
-  - `bool IsSearchActive`
-  - `StartMenuViewMode ViewMode`
-  - `bool CompactPins`
-  - `CategoryCardViewModel? SelectedCategory`
-  - 命令：`ActivateApp`、`OpenCategory`、`GoBack`、`SetViewMode`、`ToggleCompact`、`ClearSearch`、`OpenPowerMenu`、`OpenAccountMenu`
-- 视图模型只做展示状态与命令；搜索排序/分组逻辑在 Core。
-- 图标：Core 只给 `IconKey`；App 的 `IconService` 转成 `BitmapImage`/路径。VM 可暴露 `ImageSource`（App 层类型），或由转换器处理；首期选后者，保持 VM 简单。
-- 手动组装依赖（App.xaml.cs）：
+  - `IReadOnlyList<AppLetterGroupViewModel> AllAppsGroups`
+  - `ObservableCollection<AppTileViewModel> SearchResults`
+  - `string SearchQuery`、`bool IsSearchActive`
+  - `StartMenuViewMode ViewMode`、`bool CompactPins`
+  - `CategoryCardViewModel? SelectedCategory`（详情用名称/应用列表）
+  - 一批 `Visibility` 属性（Home/Search/Detail、Category/Grid/List、Normal/CompactPins）
+  - 方法：`ClearSearch`、`GoBack`、`SetViewMode`、`ToggleCompact`、`ActivateApp`（经命令）、`LogAccountAction`、`LogPowerAction`
+- `AppTileViewModel` / `CategoryCardViewModel` 各自带 `ICommand`（`RelayCommand`），供 DataTemplate 内的按钮绑定；关闭事件由 `CloseRequested` 传到页面/窗口。
+- 视图模型只做状态与动作；搜索排序/设置读写/模型在 Core。
+- 图标：`AppTileViewModel` 检查 `Assets/AppIcons/{id}.png`，存在则 `BitmapImage`，否则回退颜色+字形。
+- 手动组装依赖（`StartMenuPage` 构造函数）：
   ```text
-  FakeAppCatalog → AppSearchService / JsonSettingsService / MockAppLauncher → StartMenuViewModel
+  FakeAppCatalog → AppSearchService / JsonSettingsService → StartMenuViewModel
   ```
   不引入 DI 容器。
 
 ### 5.5 搜索
 
 - 控件：自定义 `TextBox`（`PlaceholderText="搜索应用、设置和文档"`），左侧放大镜，右侧清除按钮；不用 `AutoSuggestBox` 的下拉列表。
-- 触发：点击搜索框、`Ctrl+F`、或页面空白处直接键入（英文/数字；中文先点击）。
-- 防抖：约 100ms；输入为空则回到 Home。
-- 匹配：显示名、别名/关键字；顺序：完全匹配 > 名称前缀 > 词首匹配 > 名称包含 > 关键字包含；同级按“固定优先、字母序”。
-- 结果：最多 8 条；每组可显示“最佳匹配/应用”；匹配子串用强调色高亮（`TextHighlighter` 或 `Run`）。
-- 空结果：图标 + “没有找到与“{query}”匹配的内容”。
-- `Enter` 激活第一条；`↑/↓` 移动选择；`Esc` 清空并回到 Home。
-- 不联网、不查真实文件/设置；设置项也来自 mock 数据。
-- 中文输入法正常输入；不实现拼音首字母搜索（后续）。
+- 触发：点击搜索框或 `Ctrl+F`；输入即刷新（本地 mock，不做防抖）。
+- 匹配：显示名；顺序：完全匹配 > 名称前缀 > 词首匹配 > 词首缩写匹配（如 `vs` → Visual Studio）> 名称包含；同级按名称排序。
+- 结果：最多 8 条，统一放在“搜索结果”标题下；空结果显示“没有找到匹配的内容”。
+- `Enter` 激活聚焦项；`Down` 从搜索框进入首条结果；`Esc` 清空并回到 Home。
+- 清除按钮（`X`）清空输入；搜索框获得焦点时中文 IME 会显示系统输入工具栏（非应用 UI）。
+- 暂不做匹配子串高亮、别名/拼音搜索；不联网、不查真实文件/设置。
 
 ### 5.6 全部应用：类别 / 网格 / 列表
 
@@ -488,30 +486,30 @@ D:\Program\WindowsReStartMenu.sln\
 
 **网格视图**
 
-- 按字母分组，字母标题 + 应用图标网格（每行 6–8 个，随宽度）。
-- 适合快速扫视；顺序为字母序，固定项不额外置顶。
-- 使用外层 `ItemsRepeater`（字母组）+ 内层 `ItemsRepeater`（应用），或扁平化 `DataTemplateSelector`；首期选前者，代码更直观。
+- 按首字符分组：A–Z 按字母；数字/中文/其他统一归入 `#` 组，避免每个中文应用单独成组。
+- 组标题 + 应用图标网格（当前 8 列，随宽度）。
+- 使用外层 `ItemsRepeater`（字母组）+ 内层 `ItemsRepeater`（应用）。
 
 **列表视图**
 
-- 按字母分组的单列列表；每行 48 逻辑像素：图标 24 + 名称 + 类别（次要文字）。
-- 同样支持点击激活、键盘上下移动。
+- 按首字符分组的单列列表；每行 48 逻辑像素：图标 32 + 名称；暂不显示类别副标题。
+- 支持 Tab/Enter；方向键导航未实现。
 
 **视图选择器**
 
-- “全部”标题右侧：`视图: 类别` + 下折图标；点击弹 `MenuFlyout`（类别/网格/列表），当前项打勾。
-- 切换后持久化到设置（`LastViewMode`）；重启恢复。
-- flyout 打开期间禁止“失焦关闭”。
+- “全部”标题右侧：`视图: 类别/网格/列表` + 下折图标；点击弹 `MenuFlyout`。
+- 切换后持久化到 `settings.json`（`ViewMode`）；重启恢复。
+- flyout 打开期间不关闭窗口（实测）。
 
 ### 5.7 固定区与“显示精简信息”
 
 - 固定项来自 mock 的 32 个应用；8 列 × 4 行可见；超出滚动。
 - 每项：图标 36 + 两行标签（12px），居中；长名称两行后省略；悬停/按下有轻微背景。
-- 点击：模拟启动（写日志/调试输出），播放关闭动画并退出；不启动真实进程。
-- **“显示精简信息”**：
-  - 位置：固定区标题右侧；文字 + 上折图标；无背景，悬停时轻背景。
-  - **默认假设**：点击切换“图标-only 紧凑模式”——隐藏标签、行高降到约 56，按钮文字变为“显示详细信息”，图标改为下折；状态持久化。
-  - 真实 26H2 的语义尚未从文档确认；若实机行为不同，按用户确认修改。**这是待确认项，不阻塞视觉骨架。**
+- 点击：模拟启动（写日志/调试输出），播放关闭淡出并退出；不启动真实进程。
+- **“显示精简信息”（已实现）**：
+  - 位置：固定区标题右侧；文字 + 上折图标；无背景。
+  - 点击切换“图标-only 紧凑模式”：隐藏标签、行高 56，按钮文字变为“显示详细信息”，图标改为下折；状态持久化。
+  - 真实 26H2 的语义尚未从文档确认；若实机行为不同，按用户确认修改。
 - 不做拖拽排序、固定/取消固定、右键菜单（后续）。
 
 ### 5.8 页脚、账户与电源（仅模拟）
@@ -520,9 +518,9 @@ D:\Program\WindowsReStartMenu.sln\
   - “账户设置”“锁定”“注销”——全部只写日志，不执行真实操作。
 - 右侧：电源图标（20px）；点击弹电源菜单：
   - “睡眠”“关机”“重启”——全部只写日志，不执行真实系统命令。
-- 菜单使用 `MenuFlyout`；打开时阻止失焦关闭。
-- 头像首期用占位图/首字母圆；后续可读取当前账户图片（仍非本期必需）。
-- 用户名首期用 mock（如 “Xianene Q”），或读取当前 Windows 显示名；实现时二选一，默认 mock 以免涉及隐私。
+- 菜单使用 `MenuFlyout`；打开菜单不会关闭窗口（实测）。选择菜单项只写日志；随后窗口可能按失焦规则关闭。
+- 头像首期用首字母圆；用户名用 mock “Xianene Q”，不读取真实账户。
+- 不执行真实的锁定/注销/睡眠/关机/重启。
 
 ### 5.9 推荐区（本期不做）
 
@@ -551,7 +549,7 @@ D:\Program\WindowsReStartMenu.sln\
 - 提取脚本按应用 id 命名（如 `vscode.png`）；`AppTileViewModel` 检查 `Assets/AppIcons/{id}.png`，存在则显示 `Image`，不存在则回退到「品牌色 + Fluent 字形」占位。
 - 当前占位：PowerToys、LibreOffice（系统返回通用图标）、Discord、QQ、Minecraft、Epic Games、Firefox（本机未安装）。
 - 不提交可能引起版权/隐私问题的素材；缺失图标一律回退占位，不崩溃。
-- 应用图标显示尺寸 36；类别卡片 32；搜索结果 32；列表 24。
+- 应用图标显示尺寸 36；类别卡片 32；搜索结果 32；列表 32。
 
 ### 5.12 设置持久化
 
@@ -559,12 +557,13 @@ D:\Program\WindowsReStartMenu.sln\
 - 内容：
   ```json
   {
-    "schemaVersion": 1,
-    "viewMode": "Category",
-    "compactPins": false
+    "SchemaVersion": 1,
+    "ViewMode": "Category",
+    "CompactPins": false
   }
   ```
-- 读取失败/损坏 → 默认值；写入用“临时文件 + 替换”，避免半写。
+- 已实现 `JsonSettingsService`：读取失败/损坏 → 默认值；写入用“临时文件 + 替换”，避免半写。
+- `ViewMode` 支持 `Category` / `Grid` / `List`；与“显示精简信息”一起持久化。
 - 不持久化搜索词、滚动位置、窗口位置。
 - 不写注册表、不写系统目录。
 
@@ -607,6 +606,8 @@ D:\Program\WindowsReStartMenu.sln\
 
 ### Phase 2：完整模拟交互
 
+> **进度（2026-10-25）**：搜索、类别/网格/列表切换与持久化、类别详情、紧凑模式、账户/电源菜单、`Ctrl+F`/`Esc` 分层/`Tab`/`Enter`、搜索框 `Down`、页面入场与关闭淡出已实现并通过 build/run。方向键网格导航、搜索高亮、浅色/高对比度、DPI、阴影留 Phase 3。
+
 - 搜索（输入、结果、键盘、空状态）。
 - 视图切换（类别/网格/列表）+ 设置持久化。
 - 类别详情 + 返回。
@@ -617,10 +618,11 @@ D:\Program\WindowsReStartMenu.sln\
 
 ### Phase 3：打磨与验收
 
-- 亚克力 tint、圆角、阴影、边框校准。
+- 窗口阴影、亚克力 tint、圆角、边框校准。
+- 搜索匹配高亮；方向键在固定区/结果/类别容器内的导航。
 - 浅色主题、高对比度、透明效果关闭回退。
 - 100%/125%/150% DPI；不同窗口宽度断点。
-- 无障碍（Name、Tab、焦点、文本缩放）。
+- 无障碍（Name、Tab、焦点、文本缩放）；核心逻辑单测（搜索/设置/分组）。
 - 启动/滚动性能；内存；无泄漏。
 - 参考图叠加复核；整理“已知差异”清单。
 - **Gate**：验收清单全部通过，用户确认首期完成。

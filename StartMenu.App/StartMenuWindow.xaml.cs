@@ -5,9 +5,11 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using StartMenu_App.Interop;
 using StartMenu_App.Services;
 using Windows.UI;
+using Windows.UI.ViewManagement;
 using WinRT.Interop;
 
 namespace StartMenu_App;
@@ -48,6 +50,7 @@ public sealed partial class StartMenuWindow : Window
         Closed += OnClosed;
         RootGrid.Loaded += OnRootGridLoaded;
         RootGrid.ActualThemeChanged += OnActualThemeChanged;
+        MenuPage.RequestClose += OnPageRequestClose;
 
         StartStartupGrace();
     }
@@ -167,7 +170,7 @@ public sealed partial class StartMenuWindow : Window
             return;
         }
 
-        _isClosing = true;
+        _autoCloseTimer?.Stop();
         _autoCloseTimer = DispatcherQueue.CreateTimer();
         _autoCloseTimer.Interval = TimeSpan.FromMilliseconds(150);
         _autoCloseTimer.IsRepeating = false;
@@ -175,7 +178,7 @@ public sealed partial class StartMenuWindow : Window
         {
             _autoCloseTimer?.Stop();
             _autoCloseTimer = null;
-            Close();
+            BeginClose();
         };
         _autoCloseTimer.Start();
     }
@@ -183,7 +186,48 @@ public sealed partial class StartMenuWindow : Window
     private void OnEscapeInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         args.Handled = true;
-        Close();
+        if (MenuPage.HandleEscape())
+        {
+            return;
+        }
+
+        BeginClose();
+    }
+
+    private void OnPageRequestClose(object? sender, EventArgs args)
+    {
+        BeginClose();
+    }
+
+    private void BeginClose()
+    {
+        if (_isClosing)
+        {
+            return;
+        }
+
+        _isClosing = true;
+
+        if (!new UISettings().AnimationsEnabled)
+        {
+            Close();
+            return;
+        }
+
+        var animation = new DoubleAnimation
+        {
+            To = 0,
+            Duration = new Duration(TimeSpan.FromMilliseconds(100)),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
+        };
+
+        Storyboard.SetTarget(animation, RootGrid);
+        Storyboard.SetTargetProperty(animation, "Opacity");
+
+        var storyboard = new Storyboard();
+        storyboard.Children.Add(animation);
+        storyboard.Completed += (_, _) => Close();
+        storyboard.Begin();
     }
 
     private void OnClosed(object sender, WindowEventArgs args)
@@ -197,6 +241,7 @@ public sealed partial class StartMenuWindow : Window
         Closed -= OnClosed;
         RootGrid.Loaded -= OnRootGridLoaded;
         RootGrid.ActualThemeChanged -= OnActualThemeChanged;
+        MenuPage.RequestClose -= OnPageRequestClose;
         SystemBackdrop = null;
     }
 }

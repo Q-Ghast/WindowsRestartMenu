@@ -19,7 +19,7 @@
             </SystemBackdropElement.SystemBackdrop>
         </SystemBackdropElement>
 
-        <views:StartMenuPage />
+        <views:StartMenuPage x:Name="MenuPage" />
 
         <Border
             x:Name="PanelBorder"

@@ -125,10 +125,61 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
+    <Style x:Key="StartMenu.SearchTextBoxStyle" TargetType="TextBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="FontSize" Value="{StaticResource StartMenu.BodyFontSize}" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="UseSystemFocusVisuals" Value="False" />
+    </Style>
+
+    <Style x:Key="StartMenu.SearchClearButtonStyle" TargetType="Button">
+        <Setter Property="Width" Value="24" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="StartMenu.RowButtonStyle" TargetType="Button">
+        <Setter Property="Height" Value="48" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="{StaticResource StartMenu.ButtonCornerRadius}" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+    </Style>
+
+    <Style x:Key="StartMenu.RowLabelStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource StartMenu.BodyFontSize}" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <Style x:Key="StartMenu.GroupHeaderStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource StartMenu.BodyFontSize}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+        <Setter Property="Margin" Value="0,0,0,4" />
+    </Style>
+
     <DataTemplate x:Key="StartMenu.AppTileTemplate">
         <Button
             Height="{StaticResource StartMenu.TileRowHeight}"
             AutomationProperties.Name="{Binding DisplayName}"
+            Command="{Binding ActivateCommand}"
             Style="{StaticResource StartMenu.TileButtonStyle}"
             ToolTipService.ToolTip="{Binding DisplayName}">
             <StackPanel
@@ -187,6 +238,7 @@
         <Button
             Height="{StaticResource StartMenu.CategoryCardHeight}"
             AutomationProperties.Name="{Binding DisplayName}"
+            Command="{Binding OpenCommand}"
             Style="{StaticResource StartMenu.CategoryButtonStyle}">
             <Border Style="{StaticResource StartMenu.CategoryCardStyle}">
                 <Grid RowSpacing="8">
@@ -247,5 +299,118 @@
                 </Grid>
             </Border>
         </Button>
+    </DataTemplate>
+
+    <DataTemplate x:Key="StartMenu.AppTileCompactTemplate">
+        <Button
+            Height="56"
+            AutomationProperties.Name="{Binding DisplayName}"
+            Command="{Binding ActivateCommand}"
+            Style="{StaticResource StartMenu.TileButtonStyle}"
+            ToolTipService.ToolTip="{Binding DisplayName}">
+            <Grid
+                Width="{StaticResource StartMenu.TileIconSize}"
+                Height="{StaticResource StartMenu.TileIconSize}"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <Border
+                    Background="{Binding AccentBrush}"
+                    CornerRadius="{StaticResource StartMenu.TileCornerRadius}"
+                    Visibility="{Binding FallbackVisibility}">
+                    <FontIcon
+                        FontFamily="Segoe Fluent Icons"
+                        FontSize="18"
+                        Foreground="White"
+                        Glyph="{Binding Glyph}" />
+                </Border>
+                <Image
+                    Width="{StaticResource StartMenu.TileIconSize}"
+                    Height="{StaticResource StartMenu.TileIconSize}"
+                    Source="{Binding IconSource}"
+                    Stretch="Uniform"
+                    Visibility="{Binding IconVisibility}" />
+            </Grid>
+        </Button>
+    </DataTemplate>
+
+    <DataTemplate x:Key="StartMenu.AppRowTemplate">
+        <Button
+            AutomationProperties.Name="{Binding DisplayName}"
+            Command="{Binding ActivateCommand}"
+            Style="{StaticResource StartMenu.RowButtonStyle}"
+            ToolTipService.ToolTip="{Binding DisplayName}">
+            <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid
+                    Width="{StaticResource StartMenu.CategoryIconSize}"
+                    Height="{StaticResource StartMenu.CategoryIconSize}">
+                    <Border
+                        Background="{Binding AccentBrush}"
+                        CornerRadius="7"
+                        Visibility="{Binding FallbackVisibility}">
+                        <FontIcon
+                            FontFamily="Segoe Fluent Icons"
+                            FontSize="16"
+                            Foreground="White"
+                            Glyph="{Binding Glyph}" />
+                    </Border>
+                    <Image
+                        Width="{StaticResource StartMenu.CategoryIconSize}"
+                        Height="{StaticResource StartMenu.CategoryIconSize}"
+                        Source="{Binding IconSource}"
+                        Stretch="Uniform"
+                        Visibility="{Binding IconVisibility}" />
+                </Grid>
+
+                <TextBlock
+                    Grid.Column="1"
+                    Style="{StaticResource StartMenu.RowLabelStyle}"
+                    Text="{Binding DisplayName}" />
+            </Grid>
+        </Button>
+    </DataTemplate>
+
+    <DataTemplate x:Key="StartMenu.GridAllAppsGroupTemplate">
+        <StackPanel
+            Margin="0,0,0,16"
+            HorizontalAlignment="Stretch">
+            <TextBlock Style="{StaticResource StartMenu.GroupHeaderStyle}" Text="{Binding Header}" />
+            <ItemsRepeater
+                Margin="0,4,0,0"
+                HorizontalAlignment="Stretch"
+                ItemTemplate="{StaticResource StartMenu.AppTileTemplate}"
+                ItemsSource="{Binding Apps}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        ItemsJustification="Start"
+                        ItemsStretch="Fill"
+                        MinColumnSpacing="8"
+                        MinItemHeight="76"
+                        MinItemWidth="96"
+                        MinRowSpacing="4" />
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="StartMenu.ListAllAppsGroupTemplate">
+        <StackPanel
+            Margin="0,0,0,16"
+            HorizontalAlignment="Stretch">
+            <TextBlock Style="{StaticResource StartMenu.GroupHeaderStyle}" Text="{Binding Header}" />
+            <ItemsRepeater
+                Margin="0,4,0,0"
+                HorizontalAlignment="Stretch"
+                ItemTemplate="{StaticResource StartMenu.AppRowTemplate}"
+                ItemsSource="{Binding Apps}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Spacing="0" />
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+        </StackPanel>
     </DataTemplate>
 </ResourceDictionary>

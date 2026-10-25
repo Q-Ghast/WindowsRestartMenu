@@ -6,9 +6,20 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Background="Transparent"
+    KeyDown="OnPageKeyDown"
     mc:Ignorable="d">
 
+    <UserControl.KeyboardAccelerators>
+        <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="OnFindInvoked" />
+    </UserControl.KeyboardAccelerators>
+
     <Grid Background="Transparent">
+        <Grid.Transitions>
+            <TransitionCollection>
+                <EntranceThemeTransition FromVerticalOffset="12" />
+            </TransitionCollection>
+        </Grid.Transitions>
+
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -24,6 +35,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <FontIcon
@@ -31,14 +43,37 @@
                     FontSize="{StaticResource StartMenu.SearchIconSize}"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                     Glyph="&#xE721;" />
-                <TextBlock
+
+                <TextBox
+                    x:Name="SearchBox"
                     Grid.Column="1"
-                    Style="{StaticResource StartMenu.SearchPlaceholderStyle}"
-                    Text="搜索应用、设置和文档" />
+                    AutomationProperties.Name="搜索应用、设置和文档"
+                    IsSpellCheckEnabled="False"
+                    IsTextPredictionEnabled="False"
+                    PlaceholderText="搜索应用、设置和文档"
+                    PreventKeyboardDisplayOnProgrammaticFocus="True"
+                    KeyDown="OnSearchBoxKeyDown"
+                    Style="{StaticResource StartMenu.SearchTextBoxStyle}"
+                    Text="{Binding SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextChanged="OnSearchTextChanged" />
+
+                <Button
+                    Grid.Column="2"
+                    AutomationProperties.Name="清除搜索"
+                    Click="OnClearSearchClick"
+                    Style="{StaticResource StartMenu.SearchClearButtonStyle}"
+                    ToolTipService.ToolTip="清除"
+                    Visibility="{x:Bind ViewModel.ClearSearchVisibility, Mode=OneWay}">
+                    <FontIcon
+                        FontSize="12"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Glyph="&#xE711;" />
+                </Button>
             </Grid>
         </Border>
 
         <ScrollViewer
+            x:Name="ContentScrollViewer"
             Grid.Row="1"
             HorizontalAlignment="Stretch"
             HorizontalContentAlignment="Stretch"
@@ -46,91 +81,225 @@
             HorizontalScrollMode="Disabled"
             VerticalScrollBarVisibility="Auto"
             VerticalScrollMode="Enabled">
-            <StackPanel
-                Margin="{StaticResource StartMenu.ContentMargin}"
-                HorizontalAlignment="Stretch">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock Style="{StaticResource StartMenu.SectionHeaderStyle}" Text="已固定" />
-                    <Button
-                        Grid.Column="1"
-                        AutomationProperties.Name="显示精简信息"
-                        Style="{StaticResource StartMenu.HeaderButtonStyle}"
-                        ToolTipService.ToolTip="显示精简信息">
-                        <StackPanel Orientation="Horizontal" Spacing="4">
-                            <TextBlock
-                                FontSize="{StaticResource StartMenu.CaptionFontSize}"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                Text="显示精简信息" />
-                            <FontIcon
-                                FontSize="12"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                Glyph="&#xE70E;" />
-                        </StackPanel>
-                    </Button>
-                </Grid>
-
-                <ItemsRepeater
-                    Margin="0,8,0,0"
+            <Grid Margin="{StaticResource StartMenu.ContentMargin}">
+                <StackPanel
                     HorizontalAlignment="Stretch"
-                    ItemTemplate="{StaticResource StartMenu.AppTileTemplate}"
-                    ItemsSource="{x:Bind ViewModel.PinnedApps}">
-                    <ItemsRepeater.Layout>
-                        <UniformGridLayout
-                            ItemsJustification="Start"
-                            ItemsStretch="Fill"
-                            MinColumnSpacing="8"
-                            MinItemHeight="76"
-                            MinItemWidth="96"
-                            MinRowSpacing="4" />
-                    </ItemsRepeater.Layout>
-                </ItemsRepeater>
+                    Visibility="{x:Bind ViewModel.HomeVisibility, Mode=OneWay}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-                <Grid Margin="0,24,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource StartMenu.SectionHeaderStyle}" Text="已固定" />
+                        <Button
+                            Grid.Column="1"
+                            AutomationProperties.Name="{x:Bind ViewModel.CompactLabel, Mode=OneWay}"
+                            Click="OnToggleCompactClick"
+                            Style="{StaticResource StartMenu.HeaderButtonStyle}"
+                            ToolTipService.ToolTip="切换固定项密度">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock
+                                    FontSize="{StaticResource StartMenu.CaptionFontSize}"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="{x:Bind ViewModel.CompactLabel, Mode=OneWay}" />
+                                <FontIcon
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Glyph="{x:Bind ViewModel.CompactChevronGlyph, Mode=OneWay}" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
 
-                    <TextBlock Style="{StaticResource StartMenu.SectionHeaderStyle}" Text="全部" />
-                    <Button
-                        Grid.Column="1"
-                        AutomationProperties.Name="视图：类别"
-                        Style="{StaticResource StartMenu.HeaderButtonStyle}"
-                        ToolTipService.ToolTip="切换视图">
-                        <StackPanel Orientation="Horizontal" Spacing="4">
-                            <TextBlock
-                                FontSize="{StaticResource StartMenu.CaptionFontSize}"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                Text="视图: 类别" />
-                            <FontIcon
-                                FontSize="12"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                Glyph="&#xE70D;" />
-                        </StackPanel>
-                    </Button>
-                </Grid>
+                    <ItemsRepeater
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Stretch"
+                        ItemTemplate="{StaticResource StartMenu.AppTileTemplate}"
+                        ItemsSource="{x:Bind ViewModel.PinnedApps}"
+                        Visibility="{x:Bind ViewModel.NormalPinsVisibility, Mode=OneWay}">
+                        <ItemsRepeater.Layout>
+                            <UniformGridLayout
+                                ItemsJustification="Start"
+                                ItemsStretch="Fill"
+                                MinColumnSpacing="8"
+                                MinItemHeight="76"
+                                MinItemWidth="96"
+                                MinRowSpacing="4" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
 
-                <ItemsRepeater
-                    Margin="0,8,0,0"
+                    <ItemsRepeater
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Stretch"
+                        ItemTemplate="{StaticResource StartMenu.AppTileCompactTemplate}"
+                        ItemsSource="{x:Bind ViewModel.PinnedApps}"
+                        Visibility="{x:Bind ViewModel.CompactPinsVisibility, Mode=OneWay}">
+                        <ItemsRepeater.Layout>
+                            <UniformGridLayout
+                                ItemsJustification="Start"
+                                ItemsStretch="Fill"
+                                MinColumnSpacing="8"
+                                MinItemHeight="56"
+                                MinItemWidth="96"
+                                MinRowSpacing="4" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+
+                    <Grid Margin="0,24,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Style="{StaticResource StartMenu.SectionHeaderStyle}" Text="全部" />
+                        <Button
+                            Grid.Column="1"
+                            AutomationProperties.Name="切换视图"
+                            Style="{StaticResource StartMenu.HeaderButtonStyle}"
+                            ToolTipService.ToolTip="切换视图">
+                            <Button.Flyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem
+                                        Click="OnViewModeClick"
+                                        Tag="Category"
+                                        Text="类别" />
+                                    <MenuFlyoutItem
+                                        Click="OnViewModeClick"
+                                        Tag="Grid"
+                                        Text="网格" />
+                                    <MenuFlyoutItem
+                                        Click="OnViewModeClick"
+                                        Tag="List"
+                                        Text="列表" />
+                                </MenuFlyout>
+                            </Button.Flyout>
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock
+                                    FontSize="{StaticResource StartMenu.CaptionFontSize}"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="{x:Bind ViewModel.ViewModeLabel, Mode=OneWay}" />
+                                <FontIcon
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Glyph="&#xE70D;" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <Grid
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Stretch"
+                        Visibility="{x:Bind ViewModel.CategoryViewVisibility, Mode=OneWay}">
+                        <ItemsRepeater
+                            HorizontalAlignment="Stretch"
+                            ItemTemplate="{StaticResource StartMenu.CategoryCardTemplate}"
+                            ItemsSource="{x:Bind ViewModel.Categories}">
+                            <ItemsRepeater.Layout>
+                                <UniformGridLayout
+                                    ItemsJustification="Start"
+                                    ItemsStretch="Fill"
+                                    MinColumnSpacing="10"
+                                    MinItemHeight="148"
+                                    MinItemWidth="196"
+                                    MinRowSpacing="12" />
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
+                    </Grid>
+
+                    <Grid
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Stretch"
+                        Visibility="{x:Bind ViewModel.GridViewVisibility, Mode=OneWay}">
+                        <ItemsRepeater
+                            HorizontalAlignment="Stretch"
+                            ItemTemplate="{StaticResource StartMenu.GridAllAppsGroupTemplate}"
+                            ItemsSource="{x:Bind ViewModel.AllAppsGroups}">
+                            <ItemsRepeater.Layout>
+                                <StackLayout Spacing="0" />
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
+                    </Grid>
+
+                    <Grid
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Stretch"
+                        Visibility="{x:Bind ViewModel.ListViewVisibility, Mode=OneWay}">
+                        <ItemsRepeater
+                            HorizontalAlignment="Stretch"
+                            ItemTemplate="{StaticResource StartMenu.ListAllAppsGroupTemplate}"
+                            ItemsSource="{x:Bind ViewModel.AllAppsGroups}">
+                            <ItemsRepeater.Layout>
+                                <StackLayout Spacing="0" />
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel
                     HorizontalAlignment="Stretch"
-                    ItemTemplate="{StaticResource StartMenu.CategoryCardTemplate}"
-                    ItemsSource="{x:Bind ViewModel.Categories}">
-                    <ItemsRepeater.Layout>
-                        <UniformGridLayout
-                            ItemsJustification="Start"
-                            ItemsStretch="Fill"
-                            MinColumnSpacing="10"
-                            MinItemHeight="148"
-                            MinItemWidth="196"
-                            MinRowSpacing="12" />
-                    </ItemsRepeater.Layout>
-                </ItemsRepeater>
-            </StackPanel>
+                    Visibility="{x:Bind ViewModel.SearchVisibility, Mode=OneWay}">
+                    <TextBlock Style="{StaticResource StartMenu.SectionHeaderStyle}" Text="搜索结果" />
+                    <ItemsRepeater
+                        x:Name="SearchResultsRepeater"
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Stretch"
+                        ItemTemplate="{StaticResource StartMenu.AppRowTemplate}"
+                        ItemsSource="{x:Bind ViewModel.SearchResults}">
+                        <ItemsRepeater.Layout>
+                            <StackLayout Spacing="0" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                    <TextBlock
+                        Margin="0,24,0,0"
+                        HorizontalAlignment="Center"
+                        Style="{StaticResource StartMenu.CaptionStyle}"
+                        Text="没有找到匹配的内容"
+                        Visibility="{x:Bind ViewModel.SearchEmptyVisibility, Mode=OneWay}" />
+                </StackPanel>
+
+                <StackPanel
+                    HorizontalAlignment="Stretch"
+                    Visibility="{x:Bind ViewModel.CategoryDetailVisibility, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button
+                            x:Name="BackButton"
+                            AutomationProperties.Name="返回"
+                            Click="OnBackClick"
+                            Style="{StaticResource StartMenu.HeaderButtonStyle}"
+                            ToolTipService.ToolTip="返回">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <FontIcon
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Glyph="&#xE76B;" />
+                                <TextBlock
+                                    FontSize="{StaticResource StartMenu.CaptionFontSize}"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="返回" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock
+                            Style="{StaticResource StartMenu.SectionHeaderStyle}"
+                            Text="{x:Bind ViewModel.SelectedCategoryName, Mode=OneWay}" />
+                    </StackPanel>
+
+                    <ItemsRepeater
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Stretch"
+                        ItemTemplate="{StaticResource StartMenu.AppTileTemplate}"
+                        ItemsSource="{x:Bind ViewModel.SelectedCategoryApps, Mode=OneWay}">
+                        <ItemsRepeater.Layout>
+                            <UniformGridLayout
+                                ItemsJustification="Start"
+                                ItemsStretch="Fill"
+                                MinColumnSpacing="8"
+                                MinItemHeight="76"
+                                MinItemWidth="96"
+                                MinRowSpacing="4" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                </StackPanel>
+            </Grid>
         </ScrollViewer>
 
         <Grid
@@ -143,25 +312,65 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <Border
-                Width="{StaticResource StartMenu.AvatarSize}"
-                Height="{StaticResource StartMenu.AvatarSize}"
-                Background="{ThemeResource StartMenu.AvatarBrush}"
-                CornerRadius="{StaticResource StartMenu.AvatarCornerRadius}">
-                <TextBlock Style="{StaticResource StartMenu.AvatarInitialStyle}" Text="{x:Bind ViewModel.UserInitial}" />
-            </Border>
-
-            <TextBlock
-                Grid.Column="1"
-                Margin="10,0,0,0"
-                Style="{StaticResource StartMenu.FooterNameStyle}"
-                Text="{x:Bind ViewModel.UserName}" />
+            <Button
+                Grid.Column="0"
+                Padding="0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                AutomationProperties.Name="账户"
+                Background="Transparent"
+                BorderThickness="0"
+                CornerRadius="4"
+                ToolTipService.ToolTip="账户">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem
+                            Click="OnAccountActionClick"
+                            Tag="账户设置"
+                            Text="账户设置" />
+                        <MenuFlyoutItem
+                            Click="OnAccountActionClick"
+                            Tag="锁定"
+                            Text="锁定" />
+                        <MenuFlyoutItem
+                            Click="OnAccountActionClick"
+                            Tag="注销"
+                            Text="注销" />
+                    </MenuFlyout>
+                </Button.Flyout>
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Border
+                        Width="{StaticResource StartMenu.AvatarSize}"
+                        Height="{StaticResource StartMenu.AvatarSize}"
+                        Background="{ThemeResource StartMenu.AvatarBrush}"
+                        CornerRadius="{StaticResource StartMenu.AvatarCornerRadius}">
+                        <TextBlock Style="{StaticResource StartMenu.AvatarInitialStyle}" Text="{x:Bind ViewModel.UserInitial}" />
+                    </Border>
+                    <TextBlock Style="{StaticResource StartMenu.FooterNameStyle}" Text="{x:Bind ViewModel.UserName}" />
+                </StackPanel>
+            </Button>
 
             <Button
                 Grid.Column="2"
                 AutomationProperties.Name="电源"
                 Style="{StaticResource StartMenu.FooterIconButtonStyle}"
                 ToolTipService.ToolTip="电源">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem
+                            Click="OnPowerActionClick"
+                            Tag="睡眠"
+                            Text="睡眠" />
+                        <MenuFlyoutItem
+                            Click="OnPowerActionClick"
+                            Tag="关机"
+                            Text="关机" />
+                        <MenuFlyoutItem
+                            Click="OnPowerActionClick"
+                            Tag="重启"
+                            Text="重启" />
+                    </MenuFlyout>
+                </Button.Flyout>
                 <FontIcon
                     FontSize="18"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
