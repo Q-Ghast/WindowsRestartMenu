@@ -1,6 +1,6 @@
 # WindowsReStartMenu — AGENTS.md
 
-> **状态：Phase 3 打磨进行中（间距/浅色/搜索高亮已完成），剩余阴影/高对比度/DPI/方向键。** 最后更新：2026-10-25。
+> **状态：Phase 3 打磨进行中（中性高透明 Thin Acrylic、无阴影、间距/浅色/搜索高亮已完成），剩余高对比度/DPI/方向键。** 最后更新：2026-10-25。
 > 本文件是入口：工作流、已确认决策、范围、结构与下一步。
 > 详细设计、实现细节、阶段、验收、风险与构建说明统一放在 **[docs/DESIGN.md](docs/DESIGN.md)**。
 > `README.md` 保持不动。
@@ -52,7 +52,7 @@
 
 ### 本期做
 
-- 独立 WinUI 3 应用：亚克力、圆角、无边框、阴影、深浅色、DPI。
+- 独立 WinUI 3 应用：中性高透明 Thin Acrylic、圆角、无边框、**无阴影**、深浅色、DPI。
 - 搜索框、固定区（8 列 × 4 行）、全部区（类别 4 列；当前 4 类 1 行）、页脚。
 - 搜索、视图切换、类别详情、悬停/键盘/滚动、打开关闭与切换动画。
 - 账户/电源菜单：仅模拟，不执行真实系统操作。
@@ -100,7 +100,7 @@ WindowsReStartMenu.sln
 ## 6. 关键约束（实现时遵守）
 
 - **视觉优先**：先交付能“一眼是它”的静态骨架，再补交互与打磨。
-- **窗口**：无边框、圆角、Desktop Acrylic、置顶、不显示在任务栏/Alt+Tab；尺寸上限 888×832，底部居中，按工作区与 DPI 收窄。
+- **窗口**：无边框、圆角、中性 Thin Acrylic、**无窗口阴影**、置顶、不显示在任务栏/Alt+Tab；尺寸上限 888×832，底部居中，按工作区与 DPI 收窄。
 - **布局**：8 列 × 4 行固定项；4 列类别卡片（当前 4 类 1 行，更多时换行/滚动）；搜索与页脚固定，中间内容滚动；无推荐区。
 - **数据**：全部本地 mock；不读取真实应用列表；点击应用只写日志、不启动进程。
 - **关闭**：首期默认关闭即退出，不做托盘/常驻/全局热键。
@@ -131,15 +131,15 @@ WindowsReStartMenu.sln
 
 **已完成：模板与骨架**——官方 WinUI 3 Blank App 已生成到 `StartMenu.App` 并转为非打包；`StartMenu.Core`、`WindowsReStartMenu.sln`、CPM/`global.json`/`.gitignore` 已创建；已通过 build/run 验证。
 
-**已完成：Phase 0 窗口改造**——模板标题栏/Mica 已替换为无边框、`SystemBackdropElement` 圆角亚克力、置顶、无任务栏按钮的窗口；125% 下为 1110×1040 @ (375,30)，DWM `corner=2`，`Esc` 与失焦关闭均验证通过。窗口阴影细节留到 Phase 3。
+**已完成：Phase 0 窗口改造**——模板标题栏/Mica 已替换为无边框、`SystemBackdropElement` 圆角亚克力、置顶、无任务栏按钮的窗口；125% 下为 1110×1040 @ (375,30)，DWM `corner=2`，`Esc` 与失焦关闭均验证通过。**按用户要求不做窗口阴影。**
 
 **已完成：Phase 1 视觉骨架**——搜索框、8×4 固定区、4 列类别卡片、页脚已用本地 mock 数据渲染；深色主题、圆角亚克力、底部居中。已提取并接入 **41 个本机真实图标**（256×256，保留透明通道）；PowerToys、LibreOffice 因系统返回通用图标而保留占位，Discord/QQ/Minecraft/Epic/Firefox 未安装也保留占位。`dotnet build` 通过，截图见 `docs/references/local/phase1-window.png`。
 
-**已完成：Phase 2 完整模拟交互**——搜索（mock、缩写匹配、无结果/清除）、类别/网格/列表切换与持久化、类别详情/返回、紧凑固定项、账户/电源菜单（仅模拟）、`Ctrl+F`、`Esc` 分层、`Tab`/`Enter`、搜索框 `Down` 进入结果；页面入场与关闭淡出；设置写入 `%LOCALAPPDATA%\WindowsReStartMenu\settings.json`。已验证 build/run、视图持久化、`Esc`/失焦/点击应用关闭。**方向键网格导航未实现**（全局 `FocusManager` 移动焦点会跑出窗口，已移除）；搜索高亮、浅色/高对比度、DPI、阴影留 Phase 3。
+**已完成：Phase 2 完整模拟交互**——搜索（mock、缩写匹配、无结果/清除）、类别/网格/列表切换与持久化、类别详情/返回、紧凑固定项、账户/电源菜单（仅模拟）、`Ctrl+F`、`Esc` 分层、`Tab`/`Enter`、搜索框 `Down` 进入结果；页面入场与关闭淡出；设置写入 `%LOCALAPPDATA%\WindowsReStartMenu\settings.json`。已验证 build/run、视图持久化、`Esc`/失焦/点击应用关闭。**方向键网格导航未实现**（全局 `FocusManager` 移动焦点会跑出窗口，已移除）；搜索高亮、浅色/高对比度、DPI 留 Phase 3。
 
-**Phase 3 部分完成**——搜索与内容间距按参考图校准（搜索上边距 16、内容上边距 40、固定区到“全部”间距 48）；浅色主题实测可用；搜索命中子串高亮已实现（`HighlightedTextBlock`，固定蓝，兼容深/浅色）。截图见 `docs/references/local/phase3-home.png`、`phase3-search.png`、`phase3-light.png`。
+**Phase 3 部分完成**——材质改为自定义 `TintedAcrylicBackdrop`：`DesktopAcrylicKind.Thin` + 中性 tint（不使用彩色叠加），比默认 Base Acrylic 更透明；圆角仍由 `SystemBackdropElement` 裁剪；**按用户要求不做窗口阴影**。间距（搜索上边距 16、内容上边距 40、全部区间距 48）、浅色主题、搜索命中高亮均已完成。截图见 `docs/references/local/phase3-home.png`、`phase3-search.png`、`phase3-light.png`。
 
-**下一步：Phase 3 收尾**——无边框窗口 DWM 阴影（当前无可见阴影）、高对比度/透明效果关闭回退、100%/150% DPI、方向键容器内导航、单测与性能。详见 `docs/DESIGN.md` §6。
+**下一步：Phase 3 收尾**——高对比度/透明效果关闭回退、100%/150% DPI、方向键容器内导航、单测与性能。详见 `docs/DESIGN.md` §6。
 
 **开始前需要确认（详见 `docs/DESIGN.md` §8.2）：**
 

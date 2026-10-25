@@ -1,11 +1,11 @@
 using System;
-using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
+using StartMenu_App.Controls;
 using StartMenu_App.Interop;
 using StartMenu_App.Services;
 using Windows.UI;
@@ -44,7 +44,6 @@ public sealed partial class StartMenuWindow : Window
         _noAutoClose = HasArg("--no-auto-close");
 
         ConfigurePresenter();
-        ConfigureBackdrop();
 
         Activated += OnActivated;
         Closed += OnClosed;
@@ -81,17 +80,6 @@ public sealed partial class StartMenuWindow : Window
         presenter.IsAlwaysOnTop = true;
     }
 
-    private void ConfigureBackdrop()
-    {
-        if (DesktopAcrylicController.IsSupported())
-        {
-            return;
-        }
-
-        RootGrid.Background = new SolidColorBrush(Color.FromArgb(255, 32, 32, 32));
-        PanelBorder.Background = new SolidColorBrush(Color.FromArgb(255, 32, 32, 32));
-    }
-
     private void OnRootGridLoaded(object sender, RoutedEventArgs e)
     {
         ApplyDwmAttributes();
@@ -101,6 +89,11 @@ public sealed partial class StartMenuWindow : Window
     private void OnActualThemeChanged(FrameworkElement sender, object args)
     {
         ApplyDwmAttributes();
+
+        if (BackdropElement.SystemBackdrop is TintedAcrylicBackdrop backdrop)
+        {
+            backdrop.UpdateTheme(RootGrid.ActualTheme);
+        }
     }
 
     private void ApplyDwmAttributes()
@@ -242,6 +235,5 @@ public sealed partial class StartMenuWindow : Window
         RootGrid.Loaded -= OnRootGridLoaded;
         RootGrid.ActualThemeChanged -= OnActualThemeChanged;
         MenuPage.RequestClose -= OnPageRequestClose;
-        SystemBackdrop = null;
     }
 }

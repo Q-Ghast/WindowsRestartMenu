@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:StartMenu_App.Controls"
     xmlns:views="using:StartMenu_App.Views"
     mc:Ignorable="d">
 
@@ -13,9 +14,9 @@
             <KeyboardAccelerator Key="Escape" Invoked="OnEscapeInvoked" />
         </Grid.KeyboardAccelerators>
 
-        <SystemBackdropElement CornerRadius="8">
+        <SystemBackdropElement x:Name="BackdropElement" CornerRadius="8">
             <SystemBackdropElement.SystemBackdrop>
-                <DesktopAcrylicBackdrop />
+                <controls:TintedAcrylicBackdrop />
             </SystemBackdropElement.SystemBackdrop>
         </SystemBackdropElement>
 
@@ -24,7 +25,7 @@
         <Border
             x:Name="PanelBorder"
             Background="Transparent"
-            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderBrush="{ThemeResource StartMenu.PanelBorderBrush}"
             BorderThickness="1"
             CornerRadius="8" />
     </Grid>

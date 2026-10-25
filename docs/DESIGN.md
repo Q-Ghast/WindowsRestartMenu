@@ -95,17 +95,16 @@
 ### 2.4 材质、颜色、字体
 
 - **材质**：Desktop Acrylic（不是 Mica，也不是仅 in-app Acrylic）。参考开始菜单是 transient 表面，用 Acrylic。
-  - **实际采用**（Phase 0 已验证）：`SystemBackdropElement`（WASDK 2.0+）+ `DesktopAcrylicBackdrop`，在窗口内绘制 `CornerRadius=8` 的圆角亚克力；窗口本身透明。这样可避开“无边框窗口 DWM 圆角不裁剪内容”的问题。
-  - 需要精确 tint 时，可在 `SystemBackdropElement` 上叠加半透明 tint，或改用 `DesktopAcrylicController` + `SystemBackdropConfiguration` 做整窗材质校准。
-  - 关闭“透明效果”、节电模式、远程桌面、高对比度时自动回退纯色，必须保证可读。
+  - **当前采用**（2026-10-25）：自定义 `TintedAcrylicBackdrop`，挂在 `SystemBackdropElement` 上；内部用 `DesktopAcrylicController`（`DesktopAcrylicKind.Thin`）+ `SystemBackdropConfiguration`。这样既保留元素级 `CornerRadius=8` 裁剪，又能精确控制中性 tint 与透明度。
+  - **用户明确要求**：提高透明度、面板内不掺任何颜色、**不要窗口阴影**。自定义 backdrop 只使用中性灰 tint，不加彩色叠加；阴影不做。
+  - 深色：tint `#161616`，TintOpacity 0.24，LuminosityOpacity 0.30，fallback `#1C1C1C`；浅色：tint `#F6F6F6`，TintOpacity 0.20，LuminosityOpacity 0.26，fallback `#F3F3F3`。
+  - 关闭“透明效果”、节电模式、远程桌面、高对比度时回退纯色，必须保证可读。
 - **颜色**：尽量使用 WinUI 主题资源，不硬编码大色块：
   - 文本：`TextFillColorPrimaryBrush` / `SecondaryBrush` / `TertiaryBrush`
   - 控件填充：`ControlFillColorDefaultBrush` / `SecondaryBrush`
   - 卡片：`CardBackgroundFillColorDefaultBrush`、`CardStrokeColorDefaultBrush`
   - 悬停/按下：`SubtleFillColorSecondaryBrush` / `TertiaryBrush`
   - 强调/焦点：`AccentFillColorDefaultBrush`、`FocusStrokeColorOuterBrush`
-  - 深色亚克力初值：tint `#0F0F0F`，opacity 约 0.78，luminosity 约 0.82，fallback `#202020`
-  - 浅色亚克力初值：tint `#F5F5F5`，opacity 约 0.72，luminosity 约 0.80，fallback `#F3F3F3`
   - 面板内边 1px：深色 `#14FFFFFF`，浅色 `#12000000`（可用 Border 绘制，也可用 DWM 边框色）
 - **字体**：`Segoe UI Variable Text`（正文/标签），标题可用 `Segoe UI Variable Display`；中文由系统字体回退（Microsoft YaHei UI）。
 - **字号/字重**：标题 16 SemiBold；搜索 14；固定项标签 12；类别标签 12；页脚 14；视图选择 12；搜索结果 14。
@@ -151,7 +150,7 @@
 1. 在本地采集参考图（不入库）：深色首页、浅色首页、搜索结果、网格视图、列表视图、类别详情。
 2. 实现一个 **DEBUG 叠加模式**（例如 `F12` 或启动参数 `--reference-overlay <png>`）：把参考图半透明铺在窗口上，对齐面板左上角，切换显示/隐藏，用于逐项校准。
 3. 用同一壁纸、同一缩放、同一任务栏位置截图；Acrylic 只做定性对比，不要求像素级一致。
-4. 验收顺序：结构 → 尺寸/间距 → 字体/颜色 → 材质/圆角/阴影 → 动效。
+4. 验收顺序：结构 → 尺寸/间距 → 字体/颜色 → 材质/圆角/透明度 → 动效。**窗口阴影不做。**
 5. 参考图仅本地保存；如果用户同意，再裁剪出“只含开始菜单”的版本入库。
 
 ---
@@ -365,10 +364,10 @@ D:\Program\WindowsReStartMenu.sln\
 4. **圆角**：`DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE (33), DWMWCP_ROUND (2))`；实际内容圆角由 `SystemBackdropElement`/`Border` 的 `CornerRadius=8` 负责，窗口四角保持透明。Phase 0 实测 DWM `corner=2`，但无边框窗口的内容不会被 DWM 自动裁剪，因此采用元素级圆角。
 5. **边框**：优先 `DWMWA_BORDER_COLOR` 设成接近透明；如效果不理想，在 XAML 内画 1px `Border`（`CornerRadius=8`）并让 DWM 只负责裁剪。
 6. **亚克力**：
-   - 采用 `SystemBackdropElement` + `DesktopAcrylicBackdrop`，在圆角面板范围内绘制；根 `Grid` 与窗口背景保持透明；
-   - 该方案不依赖 DWM 裁剪窗口内容，圆角由元素自身完成；Phase 0 已验证；
-   - 主题切换/高对比度/透明效果关闭/不支持时回退纯色；
-   - 若后续需要更精确的 tint、失焦变暗或整窗材质，再切换到 `DesktopAcrylicController` + `SystemBackdropConfiguration`，并按窗口 region 处理圆角。
+   - 采用 `SystemBackdropElement` + 自定义 `TintedAcrylicBackdrop`，在圆角面板范围内绘制；根 `Grid` 与窗口背景保持透明；
+   - 自定义 backdrop 内部用 `DesktopAcrylicController`（`Thin`）和 `SystemBackdropConfiguration`，tint 为中性灰；不使用彩色叠加；
+   - 该方案不依赖 DWM 裁剪窗口内容，圆角由元素自身完成；不产生窗口阴影；
+   - 主题切换时更新 tint；高对比度/透明效果关闭/不支持时回退纯色。
 7. **DPI**：manifest `PerMonitorV2`；`GetDpiForWindow` + `XamlRoot.RasterizationScale`；DPI 变化时重新计算窗口物理尺寸与位置。
 8. **定位**（首期底部居中）：
    ```text
@@ -381,7 +380,7 @@ D:\Program\WindowsReStartMenu.sln\
    ```
    - 任务栏边通过 `SHAppBarMessage(ABM_GETTASKBARPOS)` 获取；本期只验证底部；左/右/上按同样思路预留。
    - 不写死主显示器；首期用 Primary，后续按任务栏/鼠标所在显示器。
-9. **阴影**：先验证 DWM 是否自动给无边框窗口阴影；若没有，Phase 3 再尝试 `WS_THICKFRAME` + `WM_NCHITTEST` 返回 `HTCLIENT`、或 `DwmExtendFrameIntoClientArea`、或合成阴影。**阴影不得影响点击命中**。
+9. **阴影**：**不做**（用户 2026-10-25 明确要求）。不要再引入 `WS_THICKFRAME`、`DwmExtendFrameIntoClientArea` 或合成阴影；当前无边框 + 元素级亚克力即最终形态。
 10. **显示/隐藏**：启动时 `MoveAndResize` → `Activate` → 播放打开动画；关闭时播放关闭动画后退出进程（首期最简）。不做托盘、不做常驻。
 11. **调试开关**（仅 DEBUG/命令行）：
     - `--no-auto-close`：禁止失焦自动关闭，方便截图；
@@ -533,7 +532,7 @@ D:\Program\WindowsReStartMenu.sln\
 
 - 默认跟随系统深/浅色；`ActualThemeChanged` 时更新画刷、亚克力 tint、DWM 深色模式。
 - DEBUG 可用 `--theme` 强制主题；Release 不提供 UI 开关。
-- 高对比度：禁用亚克力/阴影，使用系统颜色；所有文字可读、焦点可见。
+- 高对比度：禁用亚克力，改用中性纯色/系统颜色；所有文字可读、焦点可见。
 - 透明效果关闭/节电模式：回退纯色，不崩溃。
 - 文本缩放：至少验证 100%/125%/150%；卡片文字不溢出。
 - 无障碍：
@@ -582,7 +581,7 @@ D:\Program\WindowsReStartMenu.sln\
 
 ### Phase 0：环境与窗口 spike（先验证“能不能”）
 
-> **进度（2026-10-25）**：目录重命名、解决方案与构建配置、App/Core 两项目、官方模板应用并转为非打包均已完成，build/run 通过。**窗口改造已完成**：无边框、`SystemBackdropElement` 圆角亚克力、置顶、无任务栏按钮、底部居中；125% 下 `1110×1040 @ (375,30)`，DWM `corner=2`，`Esc` 与失焦关闭验证通过。阴影细节留到 Phase 3。
+> **进度（2026-10-25）**：目录重命名、解决方案与构建配置、App/Core 两项目、官方模板应用并转为非打包均已完成，build/run 通过。**窗口改造已完成**：无边框、`SystemBackdropElement` 圆角亚克力、置顶、无任务栏按钮、底部居中；125% 下 `1110×1040 @ (375,30)`，DWM `corner=2`，`Esc` 与失焦关闭验证通过。**不做窗口阴影（用户要求）。**
 
 - 更正目录名 `SrartMenu.App` → `StartMenu.App`。
 - 创建解决方案、`Directory.Build.props`、`Directory.Packages.props`、`global.json`、`.gitignore`。
@@ -607,7 +606,7 @@ D:\Program\WindowsReStartMenu.sln\
 
 ### Phase 2：完整模拟交互
 
-> **进度（2026-10-25）**：搜索、类别/网格/列表切换与持久化、类别详情、紧凑模式、账户/电源菜单、`Ctrl+F`/`Esc` 分层/`Tab`/`Enter`、搜索框 `Down`、页面入场与关闭淡出已实现并通过 build/run。方向键网格导航、搜索高亮、浅色/高对比度、DPI、阴影留 Phase 3。
+> **进度（2026-10-25）**：搜索、类别/网格/列表切换与持久化、类别详情、紧凑模式、账户/电源菜单、`Ctrl+F`/`Esc` 分层/`Tab`/`Enter`、搜索框 `Down`、页面入场与关闭淡出已实现并通过 build/run。方向键网格导航、搜索高亮、浅色/高对比度、DPI 留 Phase 3。
 
 - 搜索（输入、结果、键盘、空状态）。
 - 视图切换（类别/网格/列表）+ 设置持久化。
@@ -619,9 +618,9 @@ D:\Program\WindowsReStartMenu.sln\
 
 ### Phase 3：打磨与验收
 
-> **进度（2026-10-25）**：间距校准（搜索上边距 16、内容上边距 40、全部区间距 48）、浅色主题实测、搜索命中高亮已完成。阴影仍无可见效果（无边框窗口 DWM 未绘制）、高对比度/100%/150% DPI/方向键/单测/性能仍待。
+> **进度（2026-10-25）**：材质改为自定义 `TintedAcrylicBackdrop`（Thin + 中性 tint，更高透明度、无额外染色）；**按用户要求不做阴影**；间距校准、浅色主题、搜索命中高亮已完成。高对比度/100%/150% DPI/方向键/单测/性能仍待。
 
-- 窗口阴影、亚克力 tint、圆角、边框校准。
+- 中性 Thin Acrylic tint/透明度、圆角、边框校准；**不做窗口阴影**。
 - 搜索匹配高亮；方向键在固定区/结果/类别容器内的导航。
 - 浅色主题、高对比度、透明效果关闭回退。
 - 100%/125%/150% DPI；不同窗口宽度断点。
@@ -644,7 +643,7 @@ D:\Program\WindowsReStartMenu.sln\
 
 ### 7.1 视觉
 
-- [ ] 1920×1080、125%、深色、底部居中：面板尺寸/位置/圆角/亚克力/边框/阴影与参考图结构一致。
+- [ ] 1920×1080、125%、深色、底部居中：面板尺寸/位置/圆角/亚克力/边框与参考图结构一致（无阴影）。
 - [ ] 搜索框高度、圆角、图标、占位文字、左右留白正确。
 - [ ] 固定区 8 列 × 4 行可见；图标 36、标签 12、两行省略；列间距均匀。
 - [ ] “已固定”“显示精简信息”“全部”“视图: 类别”位置/字号/颜色正确。
@@ -701,7 +700,7 @@ D:\Program\WindowsReStartMenu.sln\
 | --- | --- | --- |
 | 26H2 新版开始菜单细节缺少官方文档 | 交互语义/布局偏差 | 以实机截图为准；逐项确认；保留调整点 |
 | 参考图任务栏在右侧，面板被裁切 | 尺寸测量偏差 | 以结构和比例为准；底部居中重新验收 |
-| 无边框窗口的 DWM 阴影不稳定 | 视觉不像 | Phase 0 验证；回退 `WS_THICKFRAME`/`DwmExtendFrameIntoClientArea`/接受无阴影 |
+| 无边框窗口的 DWM 阴影 | 已解决 | 用户明确不要阴影；当前无边框 + 元素级亚克力即最终形态 |
 | 失焦关闭与 flyout/截图冲突 | 误关闭 | 延迟关闭 + flyout guard + `--no-auto-close` |
 | 非打包窗口激活/前台限制 | 打开后不聚焦 | `Activate` + `SetForegroundWindow` 兜底；Phase 0 验证 |
 | 图标素材版权/隐私 | 无法入库或视觉差异 | 用户确认来源；优先本机静态提取；回退占位 |
