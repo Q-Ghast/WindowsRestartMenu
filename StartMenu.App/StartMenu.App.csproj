@@ -27,4 +27,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StartMenu.Core\StartMenu.Core.csproj" />
+  </ItemGroup>
 </Project>

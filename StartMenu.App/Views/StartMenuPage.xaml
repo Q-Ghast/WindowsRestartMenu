@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="StartMenu_App.Views.StartMenuPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Background="Transparent"
+    mc:Ignorable="d">
+
+    <Grid Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border
+            Grid.Row="0"
+            Margin="{StaticResource StartMenu.SearchMargin}"
+            AutomationProperties.Name="搜索应用、设置和文档"
+            Style="{StaticResource StartMenu.SearchBorderStyle}">
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <FontIcon
+                    VerticalAlignment="Center"
+                    FontSize="{StaticResource StartMenu.SearchIconSize}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Glyph="&#xE721;" />
+                <TextBlock
+                    Grid.Column="1"
+                    Style="{StaticResource StartMenu.SearchPlaceholderStyle}"
+                    Text="搜索应用、设置和文档" />
+            </Grid>
+        </Border>
+
+        <ScrollViewer
+            Grid.Row="1"
+            HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch"
+            HorizontalScrollBarVisibility="Disabled"
+            HorizontalScrollMode="Disabled"
+            VerticalScrollBarVisibility="Auto"
+            VerticalScrollMode="Enabled">
+            <StackPanel
+                Margin="{StaticResource StartMenu.ContentMargin}"
+                HorizontalAlignment="Stretch">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Style="{StaticResource StartMenu.SectionHeaderStyle}" Text="已固定" />
+                    <Button
+                        Grid.Column="1"
+                        AutomationProperties.Name="显示精简信息"
+                        Style="{StaticResource StartMenu.HeaderButtonStyle}"
+                        ToolTipService.ToolTip="显示精简信息">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock
+                                FontSize="{StaticResource StartMenu.CaptionFontSize}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="显示精简信息" />
+                            <FontIcon
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Glyph="&#xE70E;" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <ItemsRepeater
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Stretch"
+                    ItemTemplate="{StaticResource StartMenu.AppTileTemplate}"
+                    ItemsSource="{x:Bind ViewModel.PinnedApps}">
+                    <ItemsRepeater.Layout>
+                        <UniformGridLayout
+                            ItemsJustification="Start"
+                            ItemsStretch="Fill"
+                            MinColumnSpacing="8"
+                            MinItemHeight="76"
+                            MinItemWidth="96"
+                            MinRowSpacing="4" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+
+                <Grid Margin="0,24,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Style="{StaticResource StartMenu.SectionHeaderStyle}" Text="全部" />
+                    <Button
+                        Grid.Column="1"
+                        AutomationProperties.Name="视图：类别"
+                        Style="{StaticResource StartMenu.HeaderButtonStyle}"
+                        ToolTipService.ToolTip="切换视图">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock
+                                FontSize="{StaticResource StartMenu.CaptionFontSize}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="视图: 类别" />
+                            <FontIcon
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Glyph="&#xE70D;" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <ItemsRepeater
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Stretch"
+                    ItemTemplate="{StaticResource StartMenu.CategoryCardTemplate}"
+                    ItemsSource="{x:Bind ViewModel.Categories}">
+                    <ItemsRepeater.Layout>
+                        <UniformGridLayout
+                            ItemsJustification="Start"
+                            ItemsStretch="Fill"
+                            MinColumnSpacing="10"
+                            MinItemHeight="148"
+                            MinItemWidth="196"
+                            MinRowSpacing="12" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid
+            Grid.Row="2"
+            Height="{StaticResource StartMenu.FooterHeight}"
+            Margin="{StaticResource StartMenu.FooterMargin}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border
+                Width="{StaticResource StartMenu.AvatarSize}"
+                Height="{StaticResource StartMenu.AvatarSize}"
+                Background="{ThemeResource StartMenu.AvatarBrush}"
+                CornerRadius="{StaticResource StartMenu.AvatarCornerRadius}">
+                <TextBlock Style="{StaticResource StartMenu.AvatarInitialStyle}" Text="{x:Bind ViewModel.UserInitial}" />
+            </Border>
+
+            <TextBlock
+                Grid.Column="1"
+                Margin="10,0,0,0"
+                Style="{StaticResource StartMenu.FooterNameStyle}"
+                Text="{x:Bind ViewModel.UserName}" />
+
+            <Button
+                Grid.Column="2"
+                AutomationProperties.Name="电源"
+                Style="{StaticResource StartMenu.FooterIconButtonStyle}"
+                ToolTipService.ToolTip="电源">
+                <FontIcon
+                    FontSize="18"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Glyph="&#xE7E8;" />
+            </Button>
+        </Grid>
+    </Grid>
+</UserControl>
