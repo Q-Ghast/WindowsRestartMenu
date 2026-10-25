@@ -11,8 +11,10 @@ using Windows.UI;
 
 namespace StartMenu_App.ViewModels;
 
-public sealed class AppTileViewModel
+public sealed class AppTileViewModel : ObservableObject
 {
+    private string _searchQuery = string.Empty;
+
     public AppTileViewModel(AppEntry app, Action<AppTileViewModel>? activate = null)
     {
         App = app;
@@ -42,6 +44,12 @@ public sealed class AppTileViewModel
     public AppEntry App { get; }
 
     public string Id { get; }
+
+    public string SearchQuery
+    {
+        get => _searchQuery;
+        set => SetProperty(ref _searchQuery, value ?? string.Empty);
+    }
 
     public string DisplayName { get; }
 

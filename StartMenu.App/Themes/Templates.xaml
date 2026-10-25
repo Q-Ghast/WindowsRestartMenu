@@ -1,6 +1,7 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StartMenu_App.Controls"
     xmlns:vm="using:StartMenu_App.ViewModels">
 
     <Style x:Key="StartMenu.TileButtonStyle" TargetType="Button">
@@ -369,6 +370,47 @@
                 <TextBlock
                     Grid.Column="1"
                     Style="{StaticResource StartMenu.RowLabelStyle}"
+                    Text="{Binding DisplayName}" />
+            </Grid>
+        </Button>
+    </DataTemplate>
+
+    <DataTemplate x:Key="StartMenu.SearchResultTemplate">
+        <Button
+            AutomationProperties.Name="{Binding DisplayName}"
+            Command="{Binding ActivateCommand}"
+            Style="{StaticResource StartMenu.RowButtonStyle}"
+            ToolTipService.ToolTip="{Binding DisplayName}">
+            <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid
+                    Width="{StaticResource StartMenu.CategoryIconSize}"
+                    Height="{StaticResource StartMenu.CategoryIconSize}">
+                    <Border
+                        Background="{Binding AccentBrush}"
+                        CornerRadius="7"
+                        Visibility="{Binding FallbackVisibility}">
+                        <FontIcon
+                            FontFamily="Segoe Fluent Icons"
+                            FontSize="16"
+                            Foreground="White"
+                            Glyph="{Binding Glyph}" />
+                    </Border>
+                    <Image
+                        Width="{StaticResource StartMenu.CategoryIconSize}"
+                        Height="{StaticResource StartMenu.CategoryIconSize}"
+                        Source="{Binding IconSource}"
+                        Stretch="Uniform"
+                        Visibility="{Binding IconVisibility}" />
+                </Grid>
+
+                <controls:HighlightedTextBlock
+                    Grid.Column="1"
+                    Query="{Binding SearchQuery}"
                     Text="{Binding DisplayName}" />
             </Grid>
         </Button>

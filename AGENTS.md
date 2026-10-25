@@ -1,6 +1,6 @@
 # WindowsReStartMenu — AGENTS.md
 
-> **状态：Phase 2 完整模拟交互已完成，待 Phase 3 视觉/无障碍打磨。** 最后更新：2026-10-25。
+> **状态：Phase 3 打磨进行中（间距/浅色/搜索高亮已完成），剩余阴影/高对比度/DPI/方向键。** 最后更新：2026-10-25。
 > 本文件是入口：工作流、已确认决策、范围、结构与下一步。
 > 详细设计、实现细节、阶段、验收、风险与构建说明统一放在 **[docs/DESIGN.md](docs/DESIGN.md)**。
 > `README.md` 保持不动。
@@ -137,7 +137,9 @@ WindowsReStartMenu.sln
 
 **已完成：Phase 2 完整模拟交互**——搜索（mock、缩写匹配、无结果/清除）、类别/网格/列表切换与持久化、类别详情/返回、紧凑固定项、账户/电源菜单（仅模拟）、`Ctrl+F`、`Esc` 分层、`Tab`/`Enter`、搜索框 `Down` 进入结果；页面入场与关闭淡出；设置写入 `%LOCALAPPDATA%\WindowsReStartMenu\settings.json`。已验证 build/run、视图持久化、`Esc`/失焦/点击应用关闭。**方向键网格导航未实现**（全局 `FocusManager` 移动焦点会跑出窗口，已移除）；搜索高亮、浅色/高对比度、DPI、阴影留 Phase 3。
 
-**下一步：Phase 3 打磨**——窗口阴影、浅色/高对比度、100%/150% DPI、间距/字体/材质校准、搜索高亮、方向键与无障碍、性能。详见 `docs/DESIGN.md` §6。
+**Phase 3 部分完成**——搜索与内容间距按参考图校准（搜索上边距 16、内容上边距 40、固定区到“全部”间距 48）；浅色主题实测可用；搜索命中子串高亮已实现（`HighlightedTextBlock`，固定蓝，兼容深/浅色）。截图见 `docs/references/local/phase3-home.png`、`phase3-search.png`、`phase3-light.png`。
+
+**下一步：Phase 3 收尾**——无边框窗口 DWM 阴影（当前无可见阴影）、高对比度/透明效果关闭回退、100%/150% DPI、方向键容器内导航、单测与性能。详见 `docs/DESIGN.md` §6。
 
 **开始前需要确认（详见 `docs/DESIGN.md` §8.2）：**
 
@@ -155,7 +157,7 @@ WindowsReStartMenu.sln
 
 ## 9. 禁止与批准
 
-- 已创建的模板、窗口、视觉骨架与 Phase 2 交互视为用户批准的基础；**新的实现动作（Phase 3 打磨、数据层扩展）仍需先说明方案并取得确认。**
+- 已创建的模板、窗口、视觉骨架与 Phase 2 交互视为用户批准的基础；**Phase 3 剩余打磨与数据层扩展仍需先说明方案并取得确认。**
 - 不修改 `README.md`；不提交 `.vs/`、`bin/`、`obj/`、个人截图、日志。
 - 不做系统级修改；HookHost / Win 键 / 真实数据属于 Phase 4，不在本期。
 - 任何新依赖、新项目、范围扩大，先说明理由并取得批准。

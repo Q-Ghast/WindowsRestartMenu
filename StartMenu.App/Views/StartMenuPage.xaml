@@ -145,7 +145,7 @@
                         </ItemsRepeater.Layout>
                     </ItemsRepeater>
 
-                    <Grid Margin="0,24,0,0">
+                    <Grid Margin="0,48,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
@@ -243,7 +243,7 @@
                         x:Name="SearchResultsRepeater"
                         Margin="0,8,0,0"
                         HorizontalAlignment="Stretch"
-                        ItemTemplate="{StaticResource StartMenu.AppRowTemplate}"
+                        ItemTemplate="{StaticResource StartMenu.SearchResultTemplate}"
                         ItemsSource="{x:Bind ViewModel.SearchResults}">
                         <ItemsRepeater.Layout>
                             <StackLayout Spacing="0" />

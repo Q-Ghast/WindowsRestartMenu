@@ -230,7 +230,9 @@ public sealed class StartMenuViewModel : ObservableObject
         {
             foreach (var app in _searchService.Search(_searchQuery, 8))
             {
-                SearchResults.Add(AllApps.First(tile => tile.Id == app.Id));
+                var tile = AllApps.First(item => item.Id == app.Id);
+                tile.SearchQuery = _searchQuery;
+                SearchResults.Add(tile);
             }
         }
 
