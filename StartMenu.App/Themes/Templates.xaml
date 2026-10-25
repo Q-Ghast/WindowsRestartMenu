@@ -133,7 +133,9 @@
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="FontSize" Value="{StaticResource StartMenu.BodyFontSize}" />
         <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,2,0,0" />
         <Setter Property="UseSystemFocusVisuals" Value="False" />
     </Style>
 
