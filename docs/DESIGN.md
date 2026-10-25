@@ -2,7 +2,7 @@
 
 > 本文件是入口文档 [AGENTS.md](../AGENTS.md) 的详细展开，保留原章节编号 §2–§11，避免内部引用失效。
 > 工作流程、已确认决策、范围摘要与下一步以 `AGENTS.md` 为准。
-> 状态：项目骨架已建立（模板已应用并转为非打包），开始菜单 UI 尚未实现。最后更新：2026-10-25。
+> 状态：Phase 0 窗口骨架已完成（无边框/圆角/亚克力/底部居中），开始菜单 UI 尚未实现。最后更新：2026-10-25。
 
 **已确认决策（详见 `AGENTS.md` §2）：**
 
@@ -94,9 +94,9 @@
 
 ### 2.4 材质、颜色、字体
 
-- **材质**：整窗 Desktop Acrylic（不是 Mica，也不是仅 in-app Acrylic）。参考开始菜单是 transient 表面，用 Acrylic。
-  - 优先用 `DesktopAcrylicController` 精确控制 `TintColor`、`TintOpacity`、`LuminosityOpacity`、`FallbackColor`；
-  - 第一版可用 `Window.SystemBackdrop = new DesktopAcrylicBackdrop()` 快速验证，再切换到 controller 校准；
+- **材质**：Desktop Acrylic（不是 Mica，也不是仅 in-app Acrylic）。参考开始菜单是 transient 表面，用 Acrylic。
+  - **实际采用**（Phase 0 已验证）：`SystemBackdropElement`（WASDK 2.0+）+ `DesktopAcrylicBackdrop`，在窗口内绘制 `CornerRadius=8` 的圆角亚克力；窗口本身透明。这样可避开“无边框窗口 DWM 圆角不裁剪内容”的问题。
+  - 需要精确 tint 时，可在 `SystemBackdropElement` 上叠加半透明 tint，或改用 `DesktopAcrylicController` + `SystemBackdropConfiguration` 做整窗材质校准。
   - 关闭“透明效果”、节电模式、远程桌面、高对比度时自动回退纯色，必须保证可读。
 - **颜色**：尽量使用 WinUI 主题资源，不硬编码大色块：
   - 文本：`TextFillColorPrimaryBrush` / `SecondaryBrush` / `TertiaryBrush`
@@ -362,13 +362,13 @@ D:\Program\WindowsReStartMenu.sln\
    - 显示期间 `IsAlwaysOnTop = true`。
    - `AppWindow.IsShownInSwitchers = false`，并通过 `WS_EX_TOOLWINDOW` 避免任务栏/Alt+Tab 出现。
 3. **标题栏**：`ExtendsContentIntoTitleBar = true`，不设置可见标题栏；确认没有 1px 标题栏残影。
-4. **圆角**：`DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE (33), DWMWCP_ROUND (2))`。
+4. **圆角**：`DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE (33), DWMWCP_ROUND (2))`；实际内容圆角由 `SystemBackdropElement`/`Border` 的 `CornerRadius=8` 负责，窗口四角保持透明。Phase 0 实测 DWM `corner=2`，但无边框窗口的内容不会被 DWM 自动裁剪，因此采用元素级圆角。
 5. **边框**：优先 `DWMWA_BORDER_COLOR` 设成接近透明；如效果不理想，在 XAML 内画 1px `Border`（`CornerRadius=8`）并让 DWM 只负责裁剪。
 6. **亚克力**：
-   - `DesktopAcrylicController` + `SystemBackdropConfiguration`（theme、input active）；
-   - 根 `Grid` 背景透明，不能盖住 backdrop；
-   - 主题切换时更新 controller；高对比度/透明效果关闭时回退纯色；
-   - 失焦时 `IsInputActive=false`（亚克力变暗/降级），关闭时释放 controller。
+   - 采用 `SystemBackdropElement` + `DesktopAcrylicBackdrop`，在圆角面板范围内绘制；根 `Grid` 与窗口背景保持透明；
+   - 该方案不依赖 DWM 裁剪窗口内容，圆角由元素自身完成；Phase 0 已验证；
+   - 主题切换/高对比度/透明效果关闭/不支持时回退纯色；
+   - 若后续需要更精确的 tint、失焦变暗或整窗材质，再切换到 `DesktopAcrylicController` + `SystemBackdropConfiguration`，并按窗口 region 处理圆角。
 7. **DPI**：manifest `PerMonitorV2`；`GetDpiForWindow` + `XamlRoot.RasterizationScale`；DPI 变化时重新计算窗口物理尺寸与位置。
 8. **定位**（首期底部居中）：
    ```text
@@ -581,7 +581,7 @@ D:\Program\WindowsReStartMenu.sln\
 
 ### Phase 0：环境与窗口 spike（先验证“能不能”）
 
-> **进度（2026-10-25）**：目录重命名、解决方案与构建配置、App/Core 两项目、官方模板应用并转为非打包均已完成，build/run 通过。**窗口改造（无边框/圆角/亚克力/定位）尚未开始。**
+> **进度（2026-10-25）**：目录重命名、解决方案与构建配置、App/Core 两项目、官方模板应用并转为非打包均已完成，build/run 通过。**窗口改造已完成**：无边框、`SystemBackdropElement` 圆角亚克力、置顶、无任务栏按钮、底部居中；125% 下 `1110×1040 @ (375,30)`，DWM `corner=2`，`Esc` 与失焦关闭验证通过。阴影细节留到 Phase 3。
 
 - 更正目录名 `SrartMenu.App` → `StartMenu.App`。
 - 创建解决方案、`Directory.Build.props`、`Directory.Packages.props`、`global.json`、`.gitignore`。

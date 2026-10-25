@@ -1,6 +1,6 @@
 # WindowsReStartMenu — AGENTS.md
 
-> **状态：项目骨架已建立（模板已应用并转为非打包），开始菜单 UI 尚未实现。** 最后更新：2026-10-25。
+> **状态：Phase 0 窗口骨架已完成（无边框/圆角/亚克力/底部居中），开始菜单 UI 尚未实现。** 最后更新：2026-10-25。
 > 本文件是入口：工作流、已确认决策、范围、结构与下一步。
 > 详细设计、实现细节、阶段、验收、风险与构建说明统一放在 **[docs/DESIGN.md](docs/DESIGN.md)**。
 > `README.md` 保持不动。
@@ -130,7 +130,9 @@ WindowsReStartMenu.sln
 
 **已完成：模板与骨架**——官方 WinUI 3 Blank App 已生成到 `StartMenu.App` 并转为非打包；`StartMenu.Core`、`WindowsReStartMenu.sln`、CPM/`global.json`/`.gitignore` 已创建；已通过 build/run 验证。
 
-**下一步：Phase 0 窗口改造**——把模板默认的标题栏/Mica 窗口替换为无边框、圆角、亚克力、底部居中定位窗口；通过后再做 Phase 1 视觉骨架。详见 `docs/DESIGN.md` §6。
+**已完成：Phase 0 窗口改造**——模板标题栏/Mica 已替换为无边框、`SystemBackdropElement` 圆角亚克力、置顶、无任务栏按钮的窗口；125% 下为 1110×1040 @ (375,30)，DWM `corner=2`，`Esc` 与失焦关闭均验证通过。窗口阴影细节留到 Phase 3。
+
+**下一步：Phase 1 视觉骨架（等待确认）**——搜索框、固定区 8×4、全部区类别卡片、页脚。详见 `docs/DESIGN.md` §6。
 
 **开始前需要确认（详见 `docs/DESIGN.md` §8.2）：**
 
